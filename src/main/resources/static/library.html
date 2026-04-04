@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Digital Scroll Library — VSAS</title>
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --panel: #141a24;
+      --border: #2a3548;
+      --text: #e8edf5;
+      --muted: #8b9bb5;
+      --accent: #3b82f6;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --r: 10px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
+    .top {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: #0f141c;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1.25rem;
+      justify-content: space-between;
+    }
+    .identity { font-size: 0.95rem; }
+    .identity strong { color: #fff; }
+    .role-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      margin-left: 0.35rem;
+      vertical-align: middle;
+    }
+    .role-USER { background: rgba(59,130,246,.25); color: #93c5fd; }
+    .role-ADMIN { background: rgba(251,191,36,.2); color: #fcd34d; }
+    .role-Guest { background: rgba(148,163,184,.2); color: #cbd5e1; }
+    .top a, .top button {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .top a:hover, .top button:hover { color: var(--text); }
+    .tabs { display: flex; gap: 0.25rem; padding: 0 1rem; border-bottom: 1px solid var(--border); background: #0f141c; flex-wrap: wrap; }
+    .tab {
+      padding: 0.65rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab.hidden { display: none; }
+    section.page { padding: 1rem 1.25rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+    .hidden { display: none !important; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.5rem 0.75rem;
+      margin-bottom: 1rem;
+      align-items: end;
+    }
+    .filters label { font-size: 0.72rem; color: var(--muted); display: block; margin-bottom: 0.2rem; }
+    .filters input { width: 100%; padding: 0.45rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: #0a0e14; color: var(--text); font: inherit; }
+    .btn { padding: 0.45rem 0.85rem; border-radius: 6px; border: none; font: inherit; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-sm { padding: 0.3rem 0.55rem; font-size: 0.82rem; }
+    .layout2 { display: grid; grid-template-columns: 1fr 1.1fr; gap: 1rem; min-height: 420px; }
+    @media (max-width: 900px) { .layout2 { grid-template-columns: 1fr; } }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r); padding: 0.75rem; min-height: 200px; }
+    .scroll-list { max-height: 480px; overflow-y: auto; }
+    .scroll-item {
+      padding: 0.55rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      margin-bottom: 0.35rem;
+    }
+    .scroll-item:hover { background: rgba(255,255,255,.04); }
+    .scroll-item.sel { border-color: var(--accent); background: rgba(59,130,246,.08); }
+    .scroll-item .t { font-weight: 600; font-size: 0.9rem; }
+    .scroll-item .m { font-size: 0.72rem; color: var(--muted); }
+    .preview-box { font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow: auto; }
+    .preview-box img { max-width: 100%; border-radius: 6px; }
+    .msg { padding: 0.5rem 0.65rem; border-radius: 6px; font-size: 0.85rem; margin: 0.5rem 0; display: none; }
+    .msg.show { display: block; }
+    .msg.err { background: rgba(248,113,113,.12); color: var(--danger); }
+    .msg.ok { background: rgba(52,211,153,.12); color: var(--ok); }
+    .upload-zone { margin-top: 1rem; padding: 0.75rem; border: 1px dashed var(--border); border-radius: var(--r); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 0.4rem 0.35rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
+    input.full { width: 100%; padding: 0.45rem; margin-bottom: 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: #0a0e14; color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="identity" id="identity-line">
+      <strong>Guest</strong><span class="role-pill role-Guest">ANONYMOUS</span>
+      <span style="color:var(--muted);font-size:0.82rem"> — view &amp; preview scrolls only (no upload/download).</span>
+    </div>
+    <div>
+      <a href="/">Home</a>
+      &nbsp;·&nbsp;
+      <a href="/register.html">Sign up</a>
+      &nbsp;·&nbsp;
+      <a href="/login.html" id="link-login">Sign in</a>
+      <button type="button" class="hidden" id="btn-logout">Sign out</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab active" data-page="seeker">Scroll Seeker</button>
+    <button type="button" class="tab hidden" data-page="account" id="tab-account">My account</button>
+    <button type="button" class="tab hidden" data-page="admin" id="tab-admin">Admin</button>
+  </div>
+
+  <section class="page" id="page-seeker">
+    <h1 style="margin:0 0 0.5rem;font-size:1.2rem">Browse digital scrolls</h1>
+    <p style="margin:0 0 1rem;color:var(--muted);font-size:0.88rem">Filter, select a scroll, preview here, then download <strong>without leaving this screen</strong> (signed-in users only).</p>
+    <div class="filters">
+      <div><label>Uploader ID key</label><input id="f-uploader" placeholder="Whisker ID" /></div>
+      <div><label>Scroll ID</label><input id="f-scrollid" /></div>
+      <div><label>Name contains</label><input id="f-name" /></div>
+      <div><label>Uploaded from</label><input id="f-from" type="datetime-local" /></div>
+      <div><label>Uploaded to</label><input id="f-to" type="datetime-local" /></div>
+      <div><button type="button" class="btn" id="btn-filter">Apply filters</button></div>
+    </div>
+    <div id="seeker-msg" class="msg"></div>
+    <div class="layout2">
+      <div class="panel">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem">SCROLLS</div>
+        <div class="scroll-list" id="scroll-list"></div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+          <strong style="font-size:0.95rem" id="detail-title">Select a scroll</strong>
+          <button type="button" class="btn btn-sm hidden" id="btn-download">Download</button>
+        </div>
+        <div id="detail-meta" style="font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem"></div>
+        <div class="preview-box" id="preview-area">Pick a scroll from the list to preview its contents.</div>
+      </div>
+    </div>
+    <div class="upload-zone hidden" id="upload-zone">
+      <strong>Upload a new scroll</strong> (signed-in USER / ADMIN)
+      <div style="margin-top:0.5rem;display:grid;gap:0.35rem;max-width:420px">
+        <input class="full" id="up-scrollid" placeholder="Unique scroll ID" />
+        <input class="full" id="up-name" placeholder="Unique display name" />
+        <input type="file" id="up-file" />
+        <button type="button" class="btn" id="btn-upload" style="width:fit-content">Upload</button>
+      </div>
+      <div id="upload-msg" class="msg"></div>
+    </div>
+    <div style="margin-top:1rem" id="owner-tools" class="hidden">
+      <strong>Your scroll</strong> — edit metadata / replace file, or delete (only scrolls you uploaded).
+      <div style="margin-top:0.35rem;display:flex;flex-wrap:wrap;gap:0.35rem">
+        <input class="full" style="max-width:200px" id="ed-scrollid" placeholder="Scroll ID" />
+        <input class="full" style="max-width:200px" id="ed-name" placeholder="Name" />
+        <input type="file" id="ed-file" />
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-save-scroll">Save changes</button>
+        <button type="button" class="btn btn-sm" style="background:var(--danger)" id="btn-del-scroll">Delete</button>
+      </div>
+      <div id="owner-msg" class="msg"></div>
+    </div>
+  </section>
+
+  <section class="page hidden" id="page-account">
+    <h1 style="margin-top:0">Profile &amp; password</h1>
+    <div class="panel" style="max-width:480px">
+      <div id="acct-msg" class="msg"></div>
+      <label>Username (read-only)</label>
+      <input class="full" id="ac-user" disabled />
+      <label>ID key</label>
+      <input class="full" id="ac-idkey" />
+      <label>Full name</label>
+      <input class="full" id="ac-full" />
+      <label>Email</label>
+      <input class="full" id="ac-email" type="email" />
+      <label>Phone</label>
+      <input class="full" id="ac-phone" />
+      <button type="button" class="btn" id="btn-save-profile">Save profile</button>
+    </div>
+    <div class="panel" style="max-width:480px;margin-top:1rem">
+      <strong>Change password</strong>
+      <div id="pw-msg" class="msg"></div>
+      <input class="full" type="password" id="pw-cur" placeholder="Current password" />
+      <input class="full" type="password" id="pw-n1" placeholder="New password" />
+      <input class="full" type="password" id="pw-n2" placeholder="Confirm new" />
+      <button type="button" class="btn" id="btn-save-pw">Update password</button>
+    </div>
+  </section>
+
+  <section class="page hidden" id="page-admin">
+    <h1 style="margin-top:0">Administration</h1>
+    <div class="panel" style="margin-bottom:1rem">
+      <strong>Create user</strong> (USER or ADMIN)
+      <div id="adm-create-msg" class="msg"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;margin-top:0.5rem">
+        <input class="full" id="nu-user" placeholder="Username" />
+        <input class="full" id="nu-pass" type="password" placeholder="Password" />
+        <input class="full" id="nu-idkey" placeholder="ID key" />
+        <input class="full" id="nu-full" placeholder="Full name" />
+        <input class="full" id="nu-email" placeholder="Email" />
+        <input class="full" id="nu-phone" placeholder="Phone" />
+        <select class="full" id="nu-role" style="padding:0.45rem">
+          <option value="USER">USER</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+      </div>
+      <button type="button" class="btn" style="margin-top:0.5rem" id="btn-create-user">Create</button>
+    </div>
+    <div class="panel" style="margin-bottom:1rem">
+      <strong>All users</strong>
+      <div style="overflow:auto;margin-top:0.5rem">
+        <table id="tbl-users"><thead><tr><th>ID</th><th>User</th><th>ID key</th><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="panel">
+      <strong>Scroll stats (downloads / upload events)</strong>
+      <div style="overflow:auto;margin-top:0.5rem">
+        <table id="tbl-stats"><thead><tr><th>Scroll ID</th><th>Name</th><th>Uploader</th><th>Downloads</th><th>Upload events</th><th>Size</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const TOKEN_KEY = "vsas_token";
+    let profile = null;
+    let scrolls = [];
+    let selectedId = null;
+    let previewCache = null;
+
+    function $(id) { return document.getElementById(id); }
+    function authHeaders(json) {
+      const t = localStorage.getItem(TOKEN_KEY);
+      const h = {};
+      if (t) h["Authorization"] = "Bearer " + t;
+      if (json) h["Content-Type"] = "application/json";
+      return h;
+    }
+
+    function show(id, text, ok) {
+      const el = $(id);
+      el.textContent = text;
+      el.className = "msg show " + (ok ? "ok" : "err");
+    }
+    function hide(id) {
+      const el = $(id);
+      el.className = "msg";
+      el.textContent = "";
+    }
+
+    async function refreshIdentity() {
+      const t = localStorage.getItem(TOKEN_KEY);
+      $("link-login").classList.toggle("hidden", !!t);
+      $("btn-logout").classList.toggle("hidden", !t);
+      $("upload-zone").classList.toggle("hidden", !t);
+      $("tab-account").classList.toggle("hidden", !t);
+      if (!t) {
+        profile = null;
+        $("identity-line").innerHTML =
+          '<strong>Guest</strong><span class="role-pill role-Guest">ANONYMOUS</span>' +
+          '<span style="color:var(--muted);font-size:0.82rem"> — view &amp; preview only (no upload/download).</span>';
+        $("tab-admin").classList.add("hidden");
+        return;
+      }
+      const res = await fetch("/api/users/me", { headers: authHeaders(false) });
+      if (res.status === 401) {
+        localStorage.removeItem(TOKEN_KEY);
+        refreshIdentity();
+        return;
+      }
+      if (!res.ok) return;
+      profile = await res.json();
+      const nm = profile.fullName || profile.username;
+      const role = profile.role || "USER";
+      $("identity-line").innerHTML =
+        '<strong>' + escapeHtml(nm) + '</strong>' +
+        '<span class="role-pill role-' + role + '">' + escapeHtml(role) + '</span>' +
+        '<span style="color:var(--muted);font-size:0.82rem"> — signed in</span>';
+      $("tab-admin").classList.toggle("hidden", role !== "ADMIN");
+    }
+
+    function escapeHtml(s) {
+      if (!s) return "";
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function buildQuery() {
+      const p = new URLSearchParams();
+      const u = $("f-uploader").value.trim();
+      const sid = $("f-scrollid").value.trim();
+      const nm = $("f-name").value.trim();
+      if (u) p.set("uploaderIdKey", u);
+      if (sid) p.set("scrollId", sid);
+      if (nm) p.set("name", nm);
+      if ($("f-from").value) {
+        p.set("uploadedFrom", new Date($("f-from").value).toISOString());
+      }
+      if ($("f-to").value) {
+        p.set("uploadedTo", new Date($("f-to").value).toISOString());
+      }
+      const q = p.toString();
+      return q ? "?" + q : "";
+    }
+
+    async function loadScrolls() {
+      hide("seeker-msg");
+      const res = await fetch("/api/scrolls" + buildQuery());
+      if (!res.ok) {
+        show("seeker-msg", "Failed to load scrolls.", false);
+        return;
+      }
+      scrolls = await res.json();
+      renderList();
+    }
+
+    function renderList() {
+      const box = $("scroll-list");
+      box.innerHTML = "";
+      if (!scrolls.length) {
+        box.innerHTML = "<p style=color:var(--muted)>No scrolls match.</p>";
+        return;
+      }
+      scrolls.forEach((s) => {
+        const div = document.createElement("div");
+        div.className = "scroll-item" + (selectedId === s.id ? " sel" : "");
+        div.innerHTML =
+          "<div class=t>" + escapeHtml(s.name) + "</div>" +
+          "<div class=m>" + escapeHtml(s.scrollId) + " · " + escapeHtml(s.uploaderIdKey || "") + "</div>";
+        div.onclick = () => selectScroll(s.id);
+        box.appendChild(div);
+      });
+    }
+
+    async function selectScroll(id) {
+      selectedId = id;
+      previewCache = null;
+      renderList();
+      $("btn-download").classList.toggle("hidden", !localStorage.getItem(TOKEN_KEY));
+      const s = scrolls.find((x) => x.id === id);
+      if (!s) return;
+      $("detail-title").textContent = s.name;
+      $("detail-meta").textContent =
+        "Scroll ID: " + s.scrollId + " · Uploader ID key: " + (s.uploaderIdKey || "—") +
+        " · Size: " + s.sizeBytes + " bytes · Downloads: " + s.downloadCount;
+      $("preview-area").textContent = "Loading preview…";
+      const res = await fetch("/api/scrolls/" + id + "/preview");
+      if (!res.ok) {
+        $("preview-area").textContent = "Preview failed.";
+        return;
+      }
+      previewCache = await res.json();
+      const pr = $("preview-area");
+      pr.innerHTML = "";
+      if (previewCache.previewKind === "IMAGE_BASE64" && previewCache.mimeType) {
+        const img = document.createElement("img");
+        img.src = "data:" + previewCache.mimeType + ";base64," + previewCache.previewContent;
+        img.alt = "preview";
+        pr.appendChild(img);
+      } else if (previewCache.previewContent) {
+        pr.textContent = previewCache.previewContent;
+      } else {
+        pr.textContent = "(Binary file — preview not textual.)";
+      }
+      const mine = profile && s.uploaderUsername === profile.username;
+      $("owner-tools").classList.toggle("hidden", !mine || !localStorage.getItem(TOKEN_KEY));
+      $("ed-scrollid").value = s.scrollId;
+      $("ed-name").value = s.name;
+      $("ed-file").value = "";
+    }
+
+    async function downloadSelected() {
+      if (!selectedId || !localStorage.getItem(TOKEN_KEY)) {
+        show("seeker-msg", "Sign in to download scrolls.", false);
+        return;
+      }
+      const res = await fetch("/api/scrolls/" + selectedId + "/download", { headers: authHeaders(false) });
+      if (res.status === 401) {
+        show("seeker-msg", "Sign in required.", false);
+        return;
+      }
+      if (!res.ok) {
+        show("seeker-msg", "Download failed.", false);
+        return;
+      }
+      const blob = await res.blob();
+      const cd = res.headers.get("Content-Disposition");
+      let fn = "scroll.bin";
+      if (cd && cd.includes("filename=")) {
+        fn = cd.split("filename=")[1].replace(/["']/g, "").trim();
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fn;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      loadScrolls();
+      if (selectedId) selectScroll(selectedId);
+    }
+
+    $("btn-filter").onclick = () => loadScrolls();
+    $("btn-download").onclick = downloadSelected;
+    $("btn-logout").onclick = () => {
+      localStorage.removeItem(TOKEN_KEY);
+      refreshIdentity();
+      loadScrolls();
+      $("btn-download").classList.add("hidden");
+    };
+
+    $("btn-upload").onclick = async () => {
+      hide("upload-msg");
+      const scrollId = $("up-scrollid").value.trim();
+      const name = $("up-name").value.trim();
+      const file = $("up-file").files[0];
+      if (!scrollId || !name || !file) {
+        show("upload-msg", "Scroll ID, name, and file are required.", false);
+        return;
+      }
+      const fd = new FormData();
+      fd.append("scrollId", scrollId);
+      fd.append("name", name);
+      fd.append("file", file);
+      const res = await fetch("/api/scrolls", { method: "POST", headers: authHeaders(false), body: fd });
+      if (res.status === 401 || res.status === 403) {
+        show("upload-msg", "You must be signed in as USER or ADMIN to upload.", false);
+        return;
+      }
+      if (!res.ok) {
+        let m = "Upload failed";
+        try {
+          const j = await res.json();
+          if (j.error) m = j.error;
+        } catch (_) {}
+        show("upload-msg", m, false);
+        return;
+      }
+      show("upload-msg", "Uploaded.", true);
+      $("up-scrollid").value = "";
+      $("up-name").value = "";
+      $("up-file").value = "";
+      loadScrolls();
+    };
+
+    $("btn-save-scroll").onclick = async () => {
+      hide("owner-msg");
+      if (!selectedId) return;
+      const fd = new FormData();
+      const sid = $("ed-scrollid").value.trim();
+      const nm = $("ed-name").value.trim();
+      if (sid) fd.append("scrollId", sid);
+      if (nm) fd.append("name", nm);
+      const f = $("ed-file").files[0];
+      if (f) fd.append("file", f);
+      const res = await fetch("/api/scrolls/" + selectedId, { method: "PUT", headers: authHeaders(false), body: fd });
+      if (!res.ok) {
+        let m = "Update failed";
+        try {
+          const j = await res.json();
+          if (j.error) m = j.error;
+        } catch (_) {}
+        show("owner-msg", m, false);
+        return;
+      }
+      show("owner-msg", "Saved.", true);
+      loadScrolls();
+      selectScroll(selectedId);
+    };
+
+    $("btn-del-scroll").onclick = async () => {
+      if (!selectedId || !confirm("Delete this scroll?")) return;
+      const res = await fetch("/api/scrolls/" + selectedId, { method: "DELETE", headers: authHeaders(false) });
+      if (!res.ok) {
+        show("owner-msg", "Delete failed.", false);
+        return;
+      }
+      selectedId = null;
+      $("owner-tools").classList.add("hidden");
+      $("detail-title").textContent = "Select a scroll";
+      $("preview-area").textContent = "Pick a scroll from the list.";
+      loadScrolls();
+    };
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.onclick = () => {
+        if (tab.classList.contains("hidden")) return;
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelectorAll(".page").forEach((p) => p.classList.add("hidden"));
+        $("page-" + tab.dataset.page).classList.remove("hidden");
+        if (tab.dataset.page === "admin") loadAdmin();
+        if (tab.dataset.page === "account") loadAccountForm();
+      };
+    });
+
+    async function loadAccountForm() {
+      if (!profile) return;
+      $("ac-user").value = profile.username;
+      $("ac-idkey").value = profile.idKey || "";
+      $("ac-full").value = profile.fullName || "";
+      $("ac-email").value = profile.email || "";
+      $("ac-phone").value = profile.phoneNumber || "";
+    }
+
+    $("btn-save-profile").onclick = async () => {
+      hide("acct-msg");
+      const body = {
+        idKey: $("ac-idkey").value.trim(),
+        fullName: $("ac-full").value.trim(),
+        email: $("ac-email").value.trim(),
+        phoneNumber: $("ac-phone").value.trim(),
+      };
+      const res = await fetch("/api/users/me", { method: "PUT", headers: authHeaders(true), body: JSON.stringify(body) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        show("acct-msg", j.error || "Save failed", false);
+        return;
+      }
+      profile = j;
+      show("acct-msg", "Profile saved.", true);
+      refreshIdentity();
+    };
+
+    $("btn-save-pw").onclick = async () => {
+      hide("pw-msg");
+      const cur = $("pw-cur").value;
+      const n1 = $("pw-n1").value;
+      const n2 = $("pw-n2").value;
+      if (n1 !== n2) {
+        show("pw-msg", "New passwords do not match.", false);
+        return;
+      }
+      const res = await fetch("/api/users/me/password", {
+        method: "PUT",
+        headers: authHeaders(true),
+        body: JSON.stringify({ currentPassword: cur, newPassword: n1 }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        show("pw-msg", j.error || "Failed", false);
+        return;
+      }
+      $("pw-cur").value = "";
+      $("pw-n1").value = "";
+      $("pw-n2").value = "";
+      show("pw-msg", "Password updated.", true);
+    };
+
+    async function loadAdmin() {
+      const res = await fetch("/api/admin/users", { headers: authHeaders(false) });
+      if (!res.ok) return;
+      const users = await res.json();
+      const tb = $("tbl-users").querySelector("tbody");
+      tb.innerHTML = "";
+      users.forEach((u) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + u.id + "</td><td>" + escapeHtml(u.username) + "</td><td>" + escapeHtml(u.idKey || "") +
+          "</td><td>" + escapeHtml(u.fullName || "") + "</td><td>" + escapeHtml(u.email || "") +
+          "</td><td>" + escapeHtml(u.role) + "</td><td>" +
+          (u.username === profile.username
+            ? ""
+            : "<button class='btn btn-sm' data-del='" + u.id + "' style=background:var(--danger)>Delete</button>") +
+          "</td>";
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll("[data-del]").forEach((b) => {
+        b.onclick = async () => {
+          if (!confirm("Delete this user?")) return;
+          await fetch("/api/admin/users/" + b.dataset.del, { method: "DELETE", headers: authHeaders(false) });
+          loadAdmin();
+        };
+      });
+      const st = await fetch("/api/admin/scroll-stats", { headers: authHeaders(false) });
+      if (!st.ok) return;
+      const stats = await st.json();
+      const sb = $("tbl-stats").querySelector("tbody");
+      sb.innerHTML = "";
+      stats.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + escapeHtml(r.scrollId) + "</td><td>" + escapeHtml(r.name) + "</td><td>" +
+          escapeHtml(r.uploaderIdKey || "") + " (" + escapeHtml(r.uploaderUsername) + ")</td><td>" +
+          r.downloadCount + "</td><td>" + r.uploadEventCount + "</td><td>" + r.sizeBytes + "</td>";
+        sb.appendChild(tr);
+      });
+    };
+
+    $("btn-create-user").onclick = async () => {
+      hide("adm-create-msg");
+      const body = {
+        username: $("nu-user").value.trim(),
+        password: $("nu-pass").value,
+        idKey: $("nu-idkey").value.trim(),
+        fullName: $("nu-full").value.trim(),
+        email: $("nu-email").value.trim(),
+        phoneNumber: $("nu-phone").value.trim(),
+        role: $("nu-role").value,
+      };
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: authHeaders(true),
+        body: JSON.stringify(body),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        show("adm-create-msg", j.error || "Failed", false);
+        return;
+      }
+      show("adm-create-msg", "User created.", true);
+      loadAdmin();
+    };
+
+    (async function init() {
+      await refreshIdentity();
+      await loadScrolls();
+    })();
+  </script>
+</body>
+</html>

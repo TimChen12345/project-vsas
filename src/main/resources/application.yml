@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: vsas
+  config:
+    import: optional:classpath:application-local.yml
+  servlet:
+    multipart:
+      max-file-size: 32MB
+      max-request-size: 36MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/soft2412_assignment2?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  expiration-ms: 86400000
+
+server:
+  port: 8080

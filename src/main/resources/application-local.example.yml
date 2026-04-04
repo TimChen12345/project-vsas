@@ -1,0 +1,9 @@
+# Copy this file to application-local.yml in the same folder.
+# application-local.yml is gitignored — put your real MySQL password and JWT secret there only.
+
+spring:
+  datasource:
+    password: your-mysql-password
+
+jwt:
+  secret: "replace-with-a-long-random-string-or-run-openssl-rand-base64-48"

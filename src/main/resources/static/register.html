@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign up — VSAS</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger: #f87171;
+      --ok: #34d399;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 20, 25, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--text); }
+    .brand { font-weight: 600; letter-spacing: 0.02em; }
+    main { max-width: 520px; margin: 2rem auto; padding: 0 1rem 3rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem 1.5rem 2rem;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    }
+    h1 { margin: 0 0 0.35rem; font-size: 1.35rem; font-weight: 600; }
+    .subtitle { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem; }
+    input {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0f1419;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover { background: var(--accent-hover); }
+    button[type="submit"]:disabled { opacity: 0.55; cursor: not-allowed; }
+    .msg { margin-top: 1rem; padding: 0.65rem 0.75rem; border-radius: 8px; font-size: 0.9rem; display: none; }
+    .msg.show { display: block; }
+    .msg.err { background: rgba(248, 113, 113, 0.12); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.25); }
+    .msg.ok { background: rgba(52, 211, 153, 0.12); color: var(--ok); border: 1px solid rgba(52, 211, 153, 0.25); }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: -0.35rem; margin-bottom: 0.85rem; }
+    .field-err {
+      font-size: 0.78rem;
+      color: var(--danger);
+      margin-top: -0.55rem;
+      margin-bottom: 0.65rem;
+      min-height: 0;
+      display: none;
+    }
+    .field-err.show { display: block; }
+    input.input-err { border-color: rgba(248, 113, 113, 0.55); }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">VSAS</span>
+    <nav>
+      <a href="/">Home</a>
+      &nbsp;·&nbsp;
+      <a href="/library.html">Library</a>
+      &nbsp;·&nbsp;
+      <a href="/login.html">Sign in</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Create account</h1>
+      <p class="subtitle">All fields are required. Your <strong>ID key</strong> must be unique across the system (letters, digits, <code>.</code> <code>_</code> <code>-</code>). New accounts are <strong>USER</strong>. Built-in admin: <code>admin</code> / <code>admin123</code>.</p>
+      <form id="form" novalidate>
+        <label for="username">Username (login)</label>
+        <input id="username" autocomplete="username" required minlength="3" maxlength="64" />
+        <div class="field-err" id="err-username" role="status"></div>
+        <label for="idKey">Custom ID key (unique)</label>
+        <input id="idKey" required minlength="2" maxlength="64" placeholder="e.g. whisker-alex" />
+        <div class="hint">Used for filters and display. Cannot duplicate another user.</div>
+        <div class="field-err" id="err-idKey" role="status"></div>
+        <label for="fullName">Full name</label>
+        <input id="fullName" required maxlength="200" />
+        <div class="field-err" id="err-fullName" role="status"></div>
+        <label for="email">Email</label>
+        <input id="email" type="email" required maxlength="255" />
+        <div class="field-err" id="err-email" role="status"></div>
+        <label for="phoneNumber">Phone number</label>
+        <input id="phoneNumber" required maxlength="32" placeholder="+61 400 000 000" />
+        <div class="field-err" id="err-phoneNumber" role="status"></div>
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="new-password" required minlength="6" maxlength="128" />
+        <div class="field-err" id="err-password" role="status"></div>
+        <label for="password2">Confirm password</label>
+        <input id="password2" type="password" autocomplete="new-password" required minlength="6" />
+        <div class="field-err" id="err-password2" role="status"></div>
+        <button type="submit" id="btn">Sign up</button>
+      </form>
+      <div id="msg" class="msg" role="alert"></div>
+    </div>
+  </main>
+  <script>
+    const form = document.getElementById("form");
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("btn");
+
+    const fieldMap = {
+      username: "username",
+      idKey: "idKey",
+      fullName: "fullName",
+      email: "email",
+      phoneNumber: "phoneNumber",
+      password: "password",
+    };
+
+    function show(text, ok) {
+      msg.textContent = text;
+      msg.className = "msg show " + (ok ? "ok" : "err");
+    }
+    function hideMsg() {
+      msg.className = "msg";
+      msg.textContent = "";
+    }
+    function clearFieldErrors() {
+      Object.values(fieldMap).forEach((id) => {
+        const inp = document.getElementById(id);
+        if (inp) inp.classList.remove("input-err");
+      });
+      document.querySelectorAll(".field-err").forEach((el) => {
+        el.textContent = "";
+        el.classList.remove("show");
+      });
+      const p2 = document.getElementById("password2");
+      if (p2) p2.classList.remove("input-err");
+      const e2 = document.getElementById("err-password2");
+      if (e2) {
+        e2.textContent = "";
+        e2.classList.remove("show");
+      }
+    }
+    function applyFieldErrors(fieldErrors) {
+      if (!fieldErrors || typeof fieldErrors !== "object") return;
+      for (const [key, message] of Object.entries(fieldErrors)) {
+        const inputId = fieldMap[key];
+        if (inputId) {
+          const inp = document.getElementById(inputId);
+          const errEl = document.getElementById("err-" + key);
+          if (inp) inp.classList.add("input-err");
+          if (errEl) {
+            errEl.textContent = message;
+            errEl.classList.add("show");
+          }
+        }
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideMsg();
+      clearFieldErrors();
+      const username = document.getElementById("username").value.trim();
+      const idKey = document.getElementById("idKey").value.trim();
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phoneNumber = document.getElementById("phoneNumber").value.trim();
+      const password = document.getElementById("password").value;
+      const password2 = document.getElementById("password2").value;
+      if (password !== password2) {
+        document.getElementById("password").classList.add("input-err");
+        document.getElementById("password2").classList.add("input-err");
+        const e2 = document.getElementById("err-password2");
+        e2.textContent =
+          "Password and confirm password must be exactly the same. Re-type both fields if needed.";
+        e2.classList.add("show");
+        show(
+          "Password mismatch: the two password fields do not match. Fix them before submitting again.",
+          false
+        );
+        return;
+      }
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, idKey, fullName, email, phoneNumber }),
+        });
+        if (res.ok) {
+          show("Account created. Redirecting to sign in…", true);
+          setTimeout(() => (location.href = "/login.html"), 1200);
+        } else {
+          let text = "Sign up failed.";
+          try {
+            const data = await res.json();
+            if (data.fieldErrors) applyFieldErrors(data.fieldErrors);
+            if (data.error) text = data.error;
+          } catch (_) {}
+          show(text, false);
+        }
+      } catch {
+        show("Network error. Is the server running on port 8080?", false);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
