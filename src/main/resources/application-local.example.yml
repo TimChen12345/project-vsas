@@ -4,6 +4,5 @@
 spring:
   datasource:
     password: your-mysql-password
-
 jwt:
   secret: "replace-with-a-long-random-string-or-run-openssl-rand-base64-48"
